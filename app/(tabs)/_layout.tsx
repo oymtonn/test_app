@@ -12,6 +12,8 @@ const TabLayout = () => {
   const insets = useSafeAreaInsets();
   const TabIcon = ({ focused, icon }: TabIconProps) => {
     return (
+      // we are using clsx to conditionally apply the active class to the tab pill when the tab is focused,
+      // this will change the background color of the pill and make it look like it's active
       <View className="tabs-icon">
         <View className={clsx("tabs-pill", focused && "tabs-active")}>
           <Image source={icon} resizeMode="contain" className="tabs-glyph" />
@@ -19,7 +21,9 @@ const TabLayout = () => {
       </View>
     );
   };
-
+  // screen options for the tab navigator, we are using the insets from the safe area context to adjust the position of the tab bar and
+  // avoid notches and other screen cutouts on mobile devices,
+  // we are also using the colors and components from our theme to style the tab bar
   return (
     <Tabs
       screenOptions={{
@@ -52,7 +56,8 @@ const TabLayout = () => {
     <Tabs.Screen name="settings" options={{ title: "Settings" }} />
     <Tabs.Screen name="subscriptions/[id]" options={{ href: null }} />
     */}
-
+      {/* dynamic tabs from constants/data.ts, we are mapping through the tabs array and 
+       rendering a screen for each tab, we are also passing the icon and title as options to the screen */}
       {tabs.map((tab) => (
         <Tabs.Screen
           key={tab.name}
