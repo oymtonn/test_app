@@ -2,6 +2,8 @@ import "@/global.css";
 import { Link, useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 
+// a page for each subscription depending on the subscription id. same stuff on the page, just variable changes
+
 const SubscriptionDetails = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
