@@ -1,7 +1,9 @@
 import ListHeading from "@/components/ListHeading";
+import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import {
   HOME_BALANCE,
+  HOME_SUBSCRIPTIONS,
   HOME_USER,
   UPCOMING_SUBSCRIPTIONS,
 } from "@/constants/data";
@@ -11,6 +13,7 @@ import "@/global.css";
 import { formatCurrency } from "@/lib/utils";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
+import { useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView); // safearea view from the npm is a third party component and native wind needs styled wrapper to work with it
@@ -18,6 +21,9 @@ const SafeAreaView = styled(RNSafeAreaView); // safearea view from the npm is a 
 // home page '/'
 
 export default function App() {
+  const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
+    string | null
+  >(null);
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
       {/* dynamic linking 
@@ -72,6 +78,42 @@ export default function App() {
       </View>
       <View>
         <ListHeading title="All Subscriptions" />
+        {/* we are passing the expanded state and onPress handler to the subscription card, when the card is pressed it 
+        will toggle the expanded state and show more details about the subscription 
+                <SubscriptionCard
+          {...HOME_SUBSCRIPTIONS[0]}
+          expanded={expandedSubscriptionId === HOME_SUBSCRIPTIONS[0].id}
+          onPress={() =>
+            setExpandedSubscriptionId((currentId) =>
+              currentId === HOME_SUBSCRIPTIONS[0].id
+                ? null
+                : HOME_SUBSCRIPTIONS[0].id,
+            )
+          }
+        />
+        */}
+        <FlatList
+          data={HOME_SUBSCRIPTIONS}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <SubscriptionCard
+              {...item}
+              expanded={expandedSubscriptionId === item.id}
+              onPress={() =>
+                setExpandedSubscriptionId((currentId) =>
+                  currentId === item.id ? null : item.id,
+                )
+              }
+            />
+          )}
+          extraData={expandedSubscriptionId}
+          ItemSeparatorComponent={() => <View className="h-4" />}
+          ListEmptyComponent={
+            <Text className="home-empty-state">
+              No active subscriptions yet.
+            </Text>
+          }
+        />
       </View>
     </SafeAreaView>
   );
