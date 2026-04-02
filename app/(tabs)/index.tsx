@@ -127,6 +127,7 @@ export default function App() {
           <Text className="home-empty-state">No active subscriptions yet.</Text>
         }
         contentContainerClassName="pb-30" // add padding to the bottom of the list to avoid content being cut off by the tab bar
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );

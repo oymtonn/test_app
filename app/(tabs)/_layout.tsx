@@ -1,7 +1,8 @@
 import { tabs } from "@/constants/data";
+import { useAuth } from "@clerk/expo";
 import { colors, components } from "@/constants/theme";
 import clsx from "clsx";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { Image, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,7 +10,17 @@ const tabBar = components.tabBar;
 
 // parentheses means auto return
 const TabLayout = () => {
+  const { isSignedIn, isLoaded } = useAuth();
   const insets = useSafeAreaInsets();
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
+
   const TabIcon = ({ focused, icon }: TabIconProps) => {
     return (
       // we are using clsx to conditionally apply the active class to the tab pill when the tab is focused,
