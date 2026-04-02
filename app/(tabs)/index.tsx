@@ -41,44 +41,8 @@ export default function App() {
       </Link>
       */}
       {/* header with profile pic, name, add button */}
-      <View className="home-header">
-        <View className="home-user">
-          <Image source={images.avatar} className="home-avatar" />
-          <Text className="home-user-name">{HOME_USER.name}</Text>
-        </View>
-        <Image source={icons.add} className="home-add-icon" />
-      </View>
-      {/* balance card, cant be moved or clicked */}
-      <View className="home-balance-card">
-        <Text className="home-balance-label">Balance</Text>
 
-        <View className="home-balance-row">
-          <Text className="home-balance-amount">
-            {formatCurrency(HOME_BALANCE.amount)}
-          </Text>
-          <Text className="home-balance-date">
-            {dayjs(HOME_BALANCE.nextRenewalDate).format("MM/DD")}
-          </Text>
-        </View>
-      </View>
-      {/* scrollable content area for apps */}
-      <View>
-        <ListHeading title="Upcoming" />
-        {/*<UpcomingSubscriptionCard data={UPCOMING_SUBSCRIPTIONS[0]}/> Here, this is just using the component by itself not a list*/}
-        <FlatList
-          data={UPCOMING_SUBSCRIPTIONS}
-          horizontal
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <UpcomingSubscriptionCard data={item} />}
-          showsHorizontalScrollIndicator={false}
-          ListEmptyComponent={
-            <Text className="home-empty-state">No upcoming renewals yet.</Text>
-          }
-        />
-      </View>
-      <View>
-        <ListHeading title="All Subscriptions" />
-        {/* we are passing the expanded state and onPress handler to the subscription card, when the card is pressed it 
+      {/* we are passing the expanded state and onPress handler to the subscription card, when the card is pressed it 
         will toggle the expanded state and show more details about the subscription 
                 <SubscriptionCard
           {...HOME_SUBSCRIPTIONS[0]}
@@ -92,29 +56,78 @@ export default function App() {
           }
         />
         */}
-        <FlatList
-          data={HOME_SUBSCRIPTIONS}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <SubscriptionCard
-              {...item}
-              expanded={expandedSubscriptionId === item.id}
-              onPress={() =>
-                setExpandedSubscriptionId((currentId) =>
-                  currentId === item.id ? null : item.id,
-                )
-              }
-            />
-          )}
-          extraData={expandedSubscriptionId}
-          ItemSeparatorComponent={() => <View className="h-4" />}
-          ListEmptyComponent={
-            <Text className="home-empty-state">
-              No active subscriptions yet.
-            </Text>
-          }
-        />
-      </View>
+      <FlatList
+        // ListHeaderComponent is used to render the header of the list, it can be used to render any component above the list items,
+        //  in this case we are using it to render the user profile, balance card and upcoming subscriptions,
+        // this makes it so the whole page is scrollable and not just upcoming subscriptions
+        // take everything that is above the list of subs, that also needs to scroll and just add it to the flatlist
+        ListHeaderComponent={() => (
+          <>
+            <View className="home-header">
+              <View className="home-user">
+                <Image source={images.avatar} className="home-avatar" />
+                <Text className="home-user-name">{HOME_USER.name}</Text>
+              </View>
+              <Image source={icons.add} className="home-add-icon" />
+            </View>
+            {/* balance card, cant be moved or clicked */}
+
+            <View className="home-balance-card">
+              <Text className="home-balance-label">Balance</Text>
+
+              <View className="home-balance-row">
+                <Text className="home-balance-amount">
+                  {formatCurrency(HOME_BALANCE.amount)}
+                </Text>
+                <Text className="home-balance-date">
+                  {dayjs(HOME_BALANCE.nextRenewalDate).format("MM/DD")}
+                </Text>
+              </View>
+            </View>
+            {/* scrollable content area for apps */}
+
+            <View className="mb-5">
+              <ListHeading title="Upcoming" />
+              {/*<UpcomingSubscriptionCard data={UPCOMING_SUBSCRIPTIONS[0]}/> Here, this is just using the component by itself not a list*/}
+              <FlatList
+                data={UPCOMING_SUBSCRIPTIONS}
+                horizontal
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <UpcomingSubscriptionCard data={item} />
+                )}
+                showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={
+                  <Text className="home-empty-state">
+                    No upcoming renewals yet.
+                  </Text>
+                }
+              />
+            </View>
+
+            <ListHeading title="All Subscriptions" />
+          </>
+        )}
+        data={HOME_SUBSCRIPTIONS}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <SubscriptionCard
+            {...item}
+            expanded={expandedSubscriptionId === item.id}
+            onPress={() =>
+              setExpandedSubscriptionId((currentId) =>
+                currentId === item.id ? null : item.id,
+              )
+            }
+          />
+        )}
+        extraData={expandedSubscriptionId}
+        ItemSeparatorComponent={() => <View className="h-4" />}
+        ListEmptyComponent={
+          <Text className="home-empty-state">No active subscriptions yet.</Text>
+        }
+        contentContainerClassName="pb-30" // add padding to the bottom of the list to avoid content being cut off by the tab bar
+      />
     </SafeAreaView>
   );
 }
