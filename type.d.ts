@@ -1,5 +1,9 @@
 import type { ImageSourcePropType } from "react-native";
 
+// This file is for global type declarations that can be used across the entire project without needing to import them in each file.
+// It helps to keep the codebase clean and organized by centralizing type definitions.
+// You can add any custom types, interfaces, or global declarations here that are relevant to your project.
+
 declare global {
   interface AppTab {
     name: string;
