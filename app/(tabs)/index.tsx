@@ -1,3 +1,4 @@
+import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
@@ -17,7 +18,7 @@ import { usePathname } from "expo-router";
 import { styled } from "nativewind";
 import { useState } from "react";
 import { usePostHog } from "posthog-react-native";
-import { FlatList, Image, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView); // safearea view from the npm is a third party component and native wind needs styled wrapper to work with it
 // safe area view is used to avoid notches and other screen cutouts on mobile devices, it ensures that the content is rendered within the safe area of the device's screen
@@ -27,6 +28,8 @@ export default function App() {
   const { user } = useUser();
   const posthog = usePostHog();
   const pathname = usePathname();
+  const [subscriptions, setSubscriptions] = useState(HOME_SUBSCRIPTIONS);
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
@@ -65,6 +68,11 @@ export default function App() {
 
       return isCollapsing ? null : subscription.id;
     });
+  };
+
+  const handleCreateSubscription = (subscription: Subscription) => {
+    setSubscriptions((currentSubscriptions) => [subscription, ...currentSubscriptions]);
+    setExpandedSubscriptionId(subscription.id);
   };
 
   return (
@@ -111,7 +119,9 @@ export default function App() {
                 <Image source={avatarSource} className="home-avatar" />
                 <Text className="home-user-name">{userName}</Text>
               </View>
-              <Image source={icons.add} className="home-add-icon" />
+              <Pressable onPress={() => setIsCreateModalVisible(true)}>
+                <Image source={icons.add} className="home-add-icon" />
+              </Pressable>
             </View>
             {/* balance card, cant be moved or clicked */}
 
@@ -151,7 +161,7 @@ export default function App() {
             <ListHeading title="All Subscriptions" />
           </>
         )}
-        data={HOME_SUBSCRIPTIONS}
+        data={subscriptions}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <SubscriptionCard
@@ -167,6 +177,11 @@ export default function App() {
         }
         contentContainerClassName="pb-30" // add padding to the bottom of the list to avoid content being cut off by the tab bar
         showsVerticalScrollIndicator={false}
+      />
+      <CreateSubscriptionModal
+        visible={isCreateModalVisible}
+        onClose={() => setIsCreateModalVisible(false)}
+        onCreate={handleCreateSubscription}
       />
     </SafeAreaView>
   );
