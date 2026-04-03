@@ -1,7 +1,9 @@
-import "@/global.css";
 import { icons } from "@/constants/icons";
-import dayjs from "dayjs";
+import { AnalyticsEvent, captureEvent } from "@/lib/analytics";
+import "@/global.css";
 import { clsx } from "clsx";
+import dayjs from "dayjs";
+import { usePostHog } from "posthog-react-native";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -13,7 +15,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-
 const FREQUENCY_OPTIONS = ["Monthly", "Yearly"] as const;
 const CATEGORY_OPTIONS = [
   "Entertainment",
@@ -48,6 +49,7 @@ const CreateSubscriptionModal = ({
   onClose,
   onCreate,
 }: CreateSubscriptionModalProps) => {
+  const posthog = usePostHog();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [frequency, setFrequency] =
@@ -87,7 +89,9 @@ const CreateSubscriptionModal = ({
 
     const startDate = dayjs();
     const renewalDate =
-      frequency === "Monthly" ? startDate.add(1, "month") : startDate.add(1, "year");
+      frequency === "Monthly"
+        ? startDate.add(1, "month")
+        : startDate.add(1, "year");
 
     onCreate({
       id: `${trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`,
@@ -105,6 +109,13 @@ const CreateSubscriptionModal = ({
       color: CATEGORY_COLORS[category],
     });
 
+    captureEvent(posthog, AnalyticsEvent.SubscriptionCreated, {
+      subscriptionName: trimmedName,
+      subscriptionPrice: Number(parsedPrice.toFixed(2)),
+      billing: frequency,
+      category,
+    });
+
     handleClose();
   };
 
@@ -120,7 +131,10 @@ const CreateSubscriptionModal = ({
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1 justify-end"
         >
-          <Pressable className="modal-container" onPress={(event) => event.stopPropagation()}>
+          <Pressable
+            className="modal-container"
+            onPress={(event) => event.stopPropagation()}
+          >
             <View className="modal-header">
               <Text className="modal-title">New Subscription</Text>
               <Pressable className="modal-close" onPress={handleClose}>
@@ -176,7 +190,10 @@ const CreateSubscriptionModal = ({
                     return (
                       <Pressable
                         key={option}
-                        className={clsx("picker-option", isActive && "picker-option-active")}
+                        className={clsx(
+                          "picker-option",
+                          isActive && "picker-option-active",
+                        )}
                         onPress={() => setFrequency(option)}
                       >
                         <Text
@@ -202,7 +219,10 @@ const CreateSubscriptionModal = ({
                     return (
                       <Pressable
                         key={option}
-                        className={clsx("category-chip", isActive && "category-chip-active")}
+                        className={clsx(
+                          "category-chip",
+                          isActive && "category-chip-active",
+                        )}
                         onPress={() => setCategory(option)}
                       >
                         <Text
@@ -222,7 +242,10 @@ const CreateSubscriptionModal = ({
               {error ? <Text className="auth-error">{error}</Text> : null}
 
               <Pressable
-                className={clsx("auth-button", !isFormValid && "auth-button-disabled")}
+                className={clsx(
+                  "auth-button",
+                  !isFormValid && "auth-button-disabled",
+                )}
                 onPress={handleSubmit}
               >
                 <Text className="auth-button-text">Create Subscription</Text>

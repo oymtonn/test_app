@@ -6,6 +6,7 @@ export const AnalyticsEvent = {
   UserSignedUp: "user_signed_up",
   UserSignUpFailed: "user_sign_up_failed",
   UserSignedOut: "user_signed_out",
+  SubscriptionCreated: "subscription_created",
   SubscriptionExpanded: "subscription_expanded",
   SubscriptionCollapsed: "subscription_collapsed",
   SubscriptionDetailsViewed: "subscription_details_viewed",
