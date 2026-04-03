@@ -422,6 +422,42 @@
     @apply text-base font-sans-bold text-primary;
   }
 
+  .subscriptions-safe-area {
+    @apply flex-1 bg-background;
+  }
+
+  .subscriptions-content {
+    @apply px-5 pb-8 pt-6;
+  }
+
+  .subscriptions-header {
+    @apply mb-6 gap-4;
+  }
+
+  .subscriptions-title {
+    @apply text-3xl font-sans-bold text-primary;
+  }
+
+  .subscriptions-subtitle {
+    @apply mt-2 text-base font-sans-medium text-muted-foreground;
+  }
+
+  .subscriptions-search-input {
+    @apply rounded-2xl border border-border bg-card px-4 py-4 text-base font-sans-medium text-primary;
+  }
+
+  .subscriptions-empty {
+    @apply items-center rounded-3xl border border-dashed border-border bg-card px-6 py-10;
+  }
+
+  .subscriptions-empty-title {
+    @apply text-lg font-sans-bold text-primary;
+  }
+
+  .subscriptions-empty-copy {
+    @apply mt-2 text-center text-sm font-sans-medium text-muted-foreground;
+  }
+
   .modal-overlay {
     @apply flex-1 bg-black/50;
   }

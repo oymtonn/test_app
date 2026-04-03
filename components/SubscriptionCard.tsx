@@ -49,12 +49,12 @@ const SubscriptionCard = ({
 
         <View className="sub-price-box">
           <Text className="sub-price">{formatCurrency(price, currency)}</Text>
-          <Text className="sub-billing>">{billing}</Text>
+          <Text className="sub-billing">{billing}</Text>
         </View>
       </View>
 
       {expanded && (
-        <View className="sub-bdy">
+        <View className="sub-body">
           <View className="sub-details">
             <View className="sub-row">
               <View className="sub-row-copy">
