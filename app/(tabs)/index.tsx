@@ -1,6 +1,7 @@
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
+import { AnalyticsEvent, buildRouteUrl, captureEvent } from "@/lib/analytics";
 import {
   HOME_BALANCE,
   HOME_SUBSCRIPTIONS,
@@ -12,8 +13,10 @@ import "@/global.css";
 import { useUser } from "@clerk/expo";
 import { formatCurrency } from "@/lib/utils";
 import dayjs from "dayjs";
+import { usePathname } from "expo-router";
 import { styled } from "nativewind";
 import { useState } from "react";
+import { usePostHog } from "posthog-react-native";
 import { FlatList, Image, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView); // safearea view from the npm is a third party component and native wind needs styled wrapper to work with it
@@ -22,6 +25,8 @@ const SafeAreaView = styled(RNSafeAreaView); // safearea view from the npm is a 
 
 export default function App() {
   const { user } = useUser();
+  const posthog = usePostHog();
+  const pathname = usePathname();
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<
     string | null
   >(null);
@@ -35,6 +40,32 @@ export default function App() {
   const avatarSource = user?.imageUrl
     ? { uri: user.imageUrl }
     : images.avatar;
+
+  const handleSubscriptionPress = (subscription: Subscription) => {
+    setExpandedSubscriptionId((currentId) => {
+      const isCollapsing = currentId === subscription.id;
+
+      captureEvent(
+        posthog,
+        isCollapsing
+          ? AnalyticsEvent.SubscriptionCollapsed
+          : AnalyticsEvent.SubscriptionExpanded,
+        {
+          subscriptionId: subscription.id,
+          subscriptionName: subscription.name,
+          plan: subscription.plan,
+          category: subscription.category,
+          billing: subscription.billing,
+          status: subscription.status,
+          email: user?.primaryEmailAddress?.emailAddress ?? null,
+          pathname,
+          route_url: buildRouteUrl(pathname),
+        },
+      );
+
+      return isCollapsing ? null : subscription.id;
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
@@ -126,11 +157,7 @@ export default function App() {
           <SubscriptionCard
             {...item}
             expanded={expandedSubscriptionId === item.id}
-            onPress={() =>
-              setExpandedSubscriptionId((currentId) =>
-                currentId === item.id ? null : item.id,
-              )
-            }
+            onPress={() => handleSubscriptionPress(item)}
           />
         )}
         extraData={expandedSubscriptionId}

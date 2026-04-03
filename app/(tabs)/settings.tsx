@@ -1,10 +1,13 @@
 import "@/global.css";
 import { useClerk, useUser } from "@clerk/expo";
+import { AnalyticsEvent, buildRouteUrl, captureEvent, resetUser } from "@/lib/analytics";
 import { components } from "@/constants/theme";
 import images from "@/constants/images";
 import dayjs from "dayjs";
+import { usePathname } from "expo-router";
 import { styled } from "nativewind";
 import { useState } from "react";
+import { usePostHog } from "posthog-react-native";
 import { Image, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView as RNSafeAreaView,
@@ -15,6 +18,8 @@ const SafeAreaView = styled(RNSafeAreaView); // safearea view from the npm is a 
 const Settings = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const posthog = usePostHog();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const tabBar = components.tabBar;
@@ -37,7 +42,15 @@ const Settings = () => {
 
     try {
       setIsSigningOut(true);
+      captureEvent(posthog, AnalyticsEvent.UserSignedOut, {
+        userId: user?.id ?? null,
+        email: user?.primaryEmailAddress?.emailAddress ?? null,
+        source: "settings",
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
       await signOut();
+      resetUser(posthog);
     } finally {
       setIsSigningOut(false);
     }

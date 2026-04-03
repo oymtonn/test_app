@@ -1,11 +1,15 @@
 import { useSignIn } from "@clerk/expo";
-import { type Href, Link, useRouter } from "expo-router";
+import { AnalyticsEvent, buildRouteUrl, captureEvent } from "@/lib/analytics";
+import { type Href, Link, usePathname, useRouter } from "expo-router";
 import React from "react";
+import { usePostHog } from "posthog-react-native";
 import { Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function SignInPage() {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
+  const posthog = usePostHog();
+  const pathname = usePathname();
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -18,10 +22,23 @@ export default function SignInPage() {
     });
 
     if (error) {
+      captureEvent(posthog, AnalyticsEvent.UserSignInFailed, {
+        email: emailAddress.trim().toLowerCase(),
+        status: signIn.status,
+        error: error.message,
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
       return;
     }
 
     if (signIn.status === "complete") {
+      captureEvent(posthog, AnalyticsEvent.UserSignedIn, {
+        email: emailAddress.trim().toLowerCase(),
+        method: "password",
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
       await signIn.finalize({
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) {
@@ -51,9 +68,26 @@ export default function SignInPage() {
   };
 
   const handleVerify = async () => {
-    await signIn.mfa.verifyEmailCode({ code });
+    try {
+      await signIn.mfa.verifyEmailCode({ code });
+    } catch (error) {
+      captureEvent(posthog, AnalyticsEvent.UserSignInFailed, {
+        email: emailAddress.trim().toLowerCase(),
+        status: signIn.status,
+        error: error instanceof Error ? error.message : "email_code_verification_failed",
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
+      throw error;
+    }
 
     if (signIn.status === "complete") {
+      captureEvent(posthog, AnalyticsEvent.UserSignedIn, {
+        email: emailAddress.trim().toLowerCase(),
+        method: "email_code",
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
       await signIn.finalize({
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) {

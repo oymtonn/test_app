@@ -1,12 +1,16 @@
 import { useAuth, useSignUp } from "@clerk/expo";
-import { type Href, Link, useRouter } from "expo-router";
+import { AnalyticsEvent, buildRouteUrl, captureEvent } from "@/lib/analytics";
+import { type Href, Link, usePathname, useRouter } from "expo-router";
 import React from "react";
+import { usePostHog } from "posthog-react-native";
 import { Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function SignUpPage() {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
+  const posthog = usePostHog();
+  const pathname = usePathname();
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -19,6 +23,13 @@ export default function SignUpPage() {
     });
 
     if (error) {
+      captureEvent(posthog, AnalyticsEvent.UserSignUpFailed, {
+        email: emailAddress.trim().toLowerCase(),
+        status: signUp.status,
+        error: error.message,
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
       return;
     }
 
@@ -26,9 +37,26 @@ export default function SignUpPage() {
   };
 
   const handleVerify = async () => {
-    await signUp.verifications.verifyEmailCode({ code });
+    try {
+      await signUp.verifications.verifyEmailCode({ code });
+    } catch (error) {
+      captureEvent(posthog, AnalyticsEvent.UserSignUpFailed, {
+        email: emailAddress.trim().toLowerCase(),
+        status: signUp.status,
+        error: error instanceof Error ? error.message : "email_code_verification_failed",
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
+      throw error;
+    }
 
     if (signUp.status === "complete") {
+      captureEvent(posthog, AnalyticsEvent.UserSignedUp, {
+        email: emailAddress.trim().toLowerCase(),
+        method: "email_code",
+        pathname,
+        route_url: buildRouteUrl(pathname),
+      });
       await signUp.finalize({
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) {
